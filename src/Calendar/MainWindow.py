@@ -1,4 +1,5 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
+from EventDialog import EventDialog
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -46,12 +47,18 @@ class MainWindow(QtWidgets.QMainWindow):
         self.menubar.setObjectName("menubar")
         self.setMenuBar(self.menubar)
 
-        self.retranslateUi(self)
+        self.pushButton.clicked.connect(self.create_event)
+        self.retranslate_ui(self)
         QtCore.QMetaObject.connectSlotsByName(self)
 
-    def retranslateUi(self, MainWindow):
+    def retranslate_ui(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.pushButton.setText(_translate("MainWindow", "PushButton"))
         self.radioButton.setText(_translate("MainWindow", "RadioButton"))
         self.radioButton_2.setText(_translate("MainWindow", "RadioButton"))
+
+    def create_event(self):
+        dialog = EventDialog(self)
+        dialog.show()
+
