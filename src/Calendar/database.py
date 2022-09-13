@@ -12,12 +12,12 @@ class DBConnection:
         self.connection.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
         self.cursor = self.connection.cursor()
 
-    def check_existence(self):
-        pass
-
     def __del__(self):
         if self.connection:
             self.cursor.close()
             self.connection.close()
+
+    def add_to_db(self):
+        pass
 
 # cursor.execute('''create table if not exists events ();''')

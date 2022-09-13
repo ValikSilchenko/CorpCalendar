@@ -1,66 +1,88 @@
-from PyQt5.QtCore import *
+from PyQt5 import QtCore
 from PyQt5.QtWidgets import *
 
 
 class EventDialog(QDialog):
     def __init__(self, parent=None):
         super(EventDialog, self).__init__(parent)
-        self.setupUi()
+        self.setup_ui()
 
-    def setupUi(self):
+    def setup_ui(self):
         if self.objectName():
             self.setObjectName(u"EventDialog")
         self.setWindowTitle("Create event")
-        self.resize(364, 385)
+        self.resize(365, 385)
+
+        self.gridLayout = QGridLayout(self)
+        self.gridLayout.setObjectName(u"gridLayout")
 
         self.buttonBox = QDialogButtonBox(self)
         self.buttonBox.setObjectName(u"buttonBox")
-        self.buttonBox.setGeometry(QRect(50, 340, 260, 35))
-        self.buttonBox.setOrientation(Qt.Horizontal)
+        self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
         self.buttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
         self.buttonBox.setCenterButtons(True)
 
         self.textBrowser = QTextBrowser(self)
         self.textBrowser.setObjectName(u"textBrowser")
-        self.textBrowser.setGeometry(QRect(15, 130, 330, 190))
+        self.textBrowser.setReadOnly(False)
 
         self.themeEdit = QLineEdit(self)
         self.themeEdit.setObjectName(u"themeEdit")
-        self.themeEdit.setGeometry(QRect(70, 10, 270, 25))
 
         self.beginningDate = QDateEdit(self)
         self.beginningDate.setObjectName(u"beginningDate")
-        self.beginningDate.setGeometry(QRect(70, 50, 110, 25))
+        self.beginningDate.setCalendarPopup(True)
+        self.beginningDate.setDate(QtCore.QDate.currentDate())
 
         self.endingDate = QDateEdit(self)
         self.endingDate.setObjectName(u"endingDate")
-        self.endingDate.setGeometry(QRect(70, 80, 110, 25))
+        self.endingDate.setCalendarPopup(True)
+        self.endingDate.setDate(QtCore.QDate.currentDate())
 
         self.beginningTime = QTimeEdit(self)
         self.beginningTime.setObjectName(u"beginningTime")
-        self.beginningTime.setGeometry(QRect(190, 50, 120, 25))
+
+        self.place = QLineEdit(self)
+        self.place.setObjectName(u"place")
 
         self.themeLabel = QLabel(self)
         self.themeLabel.setObjectName(u"themeLabel")
-        self.themeLabel.setGeometry(QRect(5, 10, 60, 20))
+        self.themeLabel.setGeometry(QtCore.QRect(5, 10, 60, 20))
         self.themeLabel.setText("Тема")
 
         self.beginningLabel = QLabel(self)
         self.beginningLabel.setObjectName(u"beginningLabel")
-        self.beginningLabel.setGeometry(QRect(5, 50, 60, 20))
+        self.beginningLabel.setGeometry(QtCore.QRect(5, 50, 60, 20))
         self.beginningLabel.setText("Начало")
 
         self.endingLabel = QLabel(self)
         self.endingLabel.setObjectName(u"endingLabel")
-        self.endingLabel.setGeometry(QRect(5, 80, 60, 20))
+        self.endingLabel.setGeometry(QtCore.QRect(5, 80, 60, 20))
         self.endingLabel.setText("Окончание")
+
+        self.placeLabel = QLabel(self)
+        self.placeLabel.setObjectName(u"placeLabel")
+        self.placeLabel.setText("Место")
 
         self.commentLabel = QLabel(self)
         self.commentLabel.setObjectName(u"commentLabel")
-        self.commentLabel.setGeometry(QRect(150, 110, 70, 16))
+        self.commentLabel.setGeometry(QtCore.QRect(150, 110, 70, 15))
         self.commentLabel.setText("Комментарий")
+
+        self.gridLayout.addWidget(self.themeLabel, 0, 0, 1, 1)
+        self.gridLayout.addWidget(self.themeEdit, 0, 1, 1, 2)
+        self.gridLayout.addWidget(self.beginningLabel, 1, 0, 1, 1)
+        self.gridLayout.addWidget(self.beginningDate, 1, 1, 1, 1)
+        self.gridLayout.addWidget(self.beginningTime, 1, 2, 1, 1)
+        self.gridLayout.addWidget(self.endingLabel, 2, 0, 1, 1)
+        self.gridLayout.addWidget(self.endingDate, 2, 1, 1, 1)
+        self.gridLayout.addWidget(self.placeLabel, 3, 0, 1, 1)
+        self.gridLayout.addWidget(self.place, 3, 1, 1, 2)
+        self.gridLayout.addWidget(self.commentLabel, 4, 1, 1, 2)
+        self.gridLayout.addWidget(self.textBrowser, 5, 0, 1, 3)
+        self.gridLayout.addWidget(self.buttonBox, 6, 0, 1, 3)
 
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
 
-        QMetaObject.connectSlotsByName(self)
+        QtCore.QMetaObject.connectSlotsByName(self)
