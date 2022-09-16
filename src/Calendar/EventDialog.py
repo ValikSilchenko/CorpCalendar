@@ -3,6 +3,8 @@ from PyQt5.QtWidgets import *
 
 
 class EventDialog(QDialog):
+    event_data = QtCore.pyqtSignal(str, str, str, str, str, str)
+
     def __init__(self, parent=None):
         super(EventDialog, self).__init__(parent)
         self.setup_ui()
@@ -32,12 +34,10 @@ class EventDialog(QDialog):
         self.beginningDate = QDateEdit(self)
         self.beginningDate.setObjectName(u"beginningDate")
         self.beginningDate.setCalendarPopup(True)
-        self.beginningDate.setDate(QtCore.QDate.currentDate())
 
         self.endingDate = QDateEdit(self)
         self.endingDate.setObjectName(u"endingDate")
         self.endingDate.setCalendarPopup(True)
-        self.endingDate.setDate(QtCore.QDate.currentDate())
 
         self.beginningTime = QTimeEdit(self)
         self.beginningTime.setObjectName(u"beginningTime")
@@ -82,7 +82,27 @@ class EventDialog(QDialog):
         self.gridLayout.addWidget(self.textBrowser, 5, 0, 1, 3)
         self.gridLayout.addWidget(self.buttonBox, 6, 0, 1, 3)
 
-        self.buttonBox.accepted.connect(self.accept)
+        self.buttonBox.accepted.connect(self.send_to_main)
         self.buttonBox.rejected.connect(self.reject)
 
         QtCore.QMetaObject.connectSlotsByName(self)
+
+    def show(self, date=QtCore.QDate.currentDate()):
+        self.themeEdit.clear()
+        self.place.clear()
+        self.beginningTime.setTime(QtCore.QTime.currentTime())
+        self.beginningDate.setDate(date)
+        self.endingDate.setDate(date)
+        self.textBrowser.clear()
+        super(EventDialog, self).show()
+
+    def send_to_main(self):
+        self.event_data.emit(
+            self.themeEdit.text(),
+            self.place.text(),
+            self.beginningTime.time().toString("HH:mm:ss"),
+            self.beginningDate.date().toString("yyyy-MM-dd"),
+            self.endingDate.date().toString("yyyy-MM-dd"),
+            self.textBrowser.toPlainText()
+        )
+        self.close()

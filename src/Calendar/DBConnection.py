@@ -17,7 +17,10 @@ class DBConnection:
             self.cursor.close()
             self.connection.close()
 
-    def add_to_db(self):
-        pass
+    def add_to_db(self, theme: str, place: str, time: str, beginning_date: str, ending_date: str, comment: str):
+        self.cursor.execute("""INSERT INTO events 
+        (theme, place, time, beginning_date, ending_date, comment)
+         VALUES (%s, %s, %s, %s, %s, %s);""", (theme, place, time, beginning_date, ending_date, comment))
+        self.connection.commit()
 
 # cursor.execute('''create table if not exists events ();''')

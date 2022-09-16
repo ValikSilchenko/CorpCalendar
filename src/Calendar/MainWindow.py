@@ -1,11 +1,15 @@
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore, QtWidgets, QtGui
 from EventDialog import EventDialog
+from DBConnection import DBConnection
 
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
         self.setup_ui()
+        self.db = DBConnection()
+        self.dialog = EventDialog(self)
+        self.dialog.event_data[str, str, str, str, str, str].connect(self.create_event)
 
     def setup_ui(self):
         self.setObjectName("MainWindow")
@@ -63,7 +67,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.menubar.setObjectName("menubar")
         self.setMenuBar(self.menubar)
 
-        self.pushButton.clicked.connect(self.create_event)
+        self.pushButton.clicked.connect(self.show_event_dialog)
 
         self.setWindowTitle("CorpCalendar")
         self.pushButton.setText("PushButton")
@@ -72,6 +76,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
         QtCore.QMetaObject.connectSlotsByName(self)
 
-    def create_event(self):
-        dialog = EventDialog(self)
-        dialog.show()
+    def show_event_dialog(self):
+        if self.dialog.isHidden():
+            self.dialog.show(self.calendarWidget.selectedDate())
+
+    def create_event(
+            self, theme: str, place: str, beginning_time: str, beginning_date: str, ending_date: str, comment: str
+    ):
+        self.db.add_to_db(theme, place, beginning_time, beginning_date, ending_date, comment)
