@@ -23,4 +23,11 @@ class DBConnection:
          VALUES (%s, %s, %s, %s, %s, %s);""", (theme, place, time, beginning_date, ending_date, comment))
         self.connection.commit()
 
-# cursor.execute('''create table if not exists events ();''')
+    def get_dates_with_events(self) -> set:
+        self.cursor.execute('''SELECT DISTINCT beginning_date FROM events''')
+        dates = set(map(lambda x: x[0].strftime("%Y-%m-%d"), self.cursor.fetchall()))
+        self.cursor.execute('''SELECT DISTINCT ending_date FROM events''')
+        for date in list(map(lambda x: x[0].strftime("%Y-%m-%d"), self.cursor.fetchall())):
+            dates.add(date)
+        return dates
+

@@ -80,6 +80,12 @@
         <height>371</height>
        </size>
       </property>
+      <property name="styleSheet">
+       <string notr="true">selection-background-color: rgba(100, 100, 100, 80);
+hover: rgba(130, 205, 210, 1);
+
+                                       </string>
+      </property>
      </widget>
     </item>
     <item row="1" column="2">

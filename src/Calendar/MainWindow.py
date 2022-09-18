@@ -1,13 +1,12 @@
 from PyQt5 import QtCore, QtWidgets, QtGui
 from EventDialog import EventDialog
-from DBConnection import DBConnection
+from CalendarWidget import CalendarWidget
 
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
         self.setup_ui()
-        self.db = DBConnection()
         self.dialog = EventDialog(self)
         self.dialog.event_data[str, str, str, str, str, str].connect(self.create_event)
 
@@ -47,18 +46,21 @@ class MainWindow(QtWidgets.QMainWindow):
         spacerItem1 = QtWidgets.QSpacerItem(170, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.gridLayout.addItem(spacerItem1, 0, 5, 1, 1)
 
-        self.calendarWidget = QtWidgets.QCalendarWidget(self.centralwidget)
+        self.calendarWidget = CalendarWidget(self.centralwidget)
         self.calendarWidget.setMinimumSize(QtCore.QSize(410, 370))
         self.calendarWidget.setObjectName("calendarWidget")
+        self.calendarWidget.setStyleSheet("""selection-background-color: rgba(50, 50, 50, 80);
+        hover: rgba(120, 185, 180, 50);""")
         self.gridLayout.addWidget(self.calendarWidget, 1, 0, 1, 2)
 
         spacerItem2 = QtWidgets.QSpacerItem(310, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.gridLayout.addItem(spacerItem2, 1, 2, 1, 1)
 
-        self.listView = QtWidgets.QListView(self.centralwidget)
-        self.listView.setMinimumSize(QtCore.QSize(360, 370))
-        self.listView.setObjectName("listView")
-        self.gridLayout.addWidget(self.listView, 1, 3, 1, 3)
+        self.listWidget = QtWidgets.QListWidget(self.centralwidget)
+        self.listWidget.setMinimumSize(QtCore.QSize(360, 370))
+        self.listWidget.setObjectName("listWidget")
+        self.gridLayout.addWidget(self.listWidget, 1, 3, 1, 3)
+        self.listWidget.itemClicked.connect()
 
         self.setCentralWidget(self.centralwidget)
 
@@ -83,4 +85,9 @@ class MainWindow(QtWidgets.QMainWindow):
     def create_event(
             self, theme: str, place: str, beginning_time: str, beginning_date: str, ending_date: str, comment: str
     ):
-        self.db.add_to_db(theme, place, beginning_time, beginning_date, ending_date, comment)
+        self.calendarWidget.db.add_to_db(theme, place, beginning_time, beginning_date, ending_date, comment)
+        cell_format = QtGui.QTextCharFormat()
+        cell_format.setBackground(QtGui.QColor(0, 0, 150, 50))
+        self.calendarWidget.setDateTextFormat(QtCore.QDate.fromString(beginning_date, "yyyy-MM-dd"), cell_format)
+        self.calendarWidget.setSelectedDate(self.calendarWidget.selectedDate())
+
