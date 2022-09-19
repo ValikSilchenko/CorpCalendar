@@ -96,13 +96,22 @@ class EventDialog(QDialog):
         self.textBrowser.clear()
         super(EventDialog, self).show()
 
+    # def show_selected_event(self):
+    #     self.themeEdit.clear()
+    #     self.place.clear()
+    #     self.beginningTime.setTime(QtCore.QTime.currentTime())
+    #     self.beginningDate.setDate(date)
+    #     self.endingDate.setDate(date)
+    #     self.textBrowser.clear()
+
     def send_to_main(self):
-        self.event_data.emit(
-            self.themeEdit.text(),
-            self.place.text(),
-            self.beginningTime.time().toString("HH:mm:ss"),
-            self.beginningDate.date().toString("yyyy-MM-dd"),
-            self.endingDate.date().toString("yyyy-MM-dd"),
-            self.textBrowser.toPlainText()
-        )
-        self.close()
+        if not self.themeEdit.text().isspace() and self.themeEdit.text() != '':
+            self.event_data.emit(
+                self.themeEdit.text(),
+                self.place.text(),
+                self.beginningTime.time().toString("HH:mm:ss"),
+                self.beginningDate.date().toString("yyyy-MM-dd"),
+                self.endingDate.date().toString("yyyy-MM-dd"),
+                self.textBrowser.toPlainText()
+            )
+            self.close()
