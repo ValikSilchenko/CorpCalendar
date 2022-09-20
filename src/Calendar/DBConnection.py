@@ -18,7 +18,7 @@ class DBConnection:
             self.cursor.close()
             self.connection.close()
 
-    def add_to_db(self, theme: str, place: str, time: str, beginning_date: str, ending_date: str, comment: str):
+    def add_event(self, theme: str, place: str, time: str, beginning_date: str, ending_date: str, comment: str):
         self.cursor.execute('''INSERT INTO events 
         (theme, place, time, beginning_date, ending_date, comment)
          VALUES (%s, %s, %s, %s, %s, %s);''', (theme, place, time, beginning_date, ending_date, comment))
@@ -35,3 +35,18 @@ class DBConnection:
     def get_events_by_date(self, date: str):
         self.cursor.execute('''SELECT * FROM events WHERE beginning_date = %s;''', (date,))
         return self.cursor.fetchall()
+
+    def get_event_by_id(self, event_id: int):
+        self.cursor.execute('''SELECT * FROM events WHERE id = %s''', (event_id,))
+        return self.cursor.fetchone()
+
+    def update_event(self, event_id: int, theme: str, place: str, time: str, beginning_date: str, ending_date: str,
+                     comment: str):
+        self.cursor.execute('''UPDATE events
+         SET theme = %s, place = %s, time = %s, beginning_date = %s, ending_date = %s, comment = %s WHERE id = %s;''',
+                            (theme, place, time, beginning_date, ending_date, comment, event_id))
+        self.connection.commit()
+
+    def delete_event(self, event_id: int):
+        self.cursor.execute('''DELETE FROM events WHERE id = %s''', (event_id,))
+        self.connection.commit()

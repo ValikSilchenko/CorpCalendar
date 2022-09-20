@@ -2,6 +2,7 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 from EventDialog import EventDialog
 from CalendarWidget import CalendarWidget
 from ListWidgetItem import ListWidgetItem
+from DBConnection import DBConnection
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -9,7 +10,7 @@ class MainWindow(QtWidgets.QMainWindow):
         super().__init__()
         self.setup_ui()
         self.dialog = EventDialog(self)
-        self.dialog.event_data[str, str, str, str, str, str].connect(self.create_event)
+        self.dialog.event_data.connect(self.after_create_event)
         self.load_events()
 
     def setup_ui(self):
@@ -64,7 +65,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.listWidget.setMinimumSize(QtCore.QSize(360, 370))
         self.listWidget.setObjectName("listWidget")
         self.gridLayout.addWidget(self.listWidget, 1, 3, 1, 3)
-        # self.listWidget.itemClicked.connect()
+        self.listWidget.itemClicked.connect(self.show_event_dialog)
 
         self.setCentralWidget(self.centralwidget)
 
@@ -83,7 +84,7 @@ class MainWindow(QtWidgets.QMainWindow):
         QtCore.QMetaObject.connectSlotsByName(self)
 
     def show_event_dialog(self):
-        self.dialog.show()
+        self.dialog.show_event(self.listWidget.currentItem().id)
 
     def show_create_event_dialog(self):
         if self.dialog.isHidden():
@@ -91,17 +92,13 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def load_events(self):
         self.listWidget.clear()
-        events = self.calendarWidget.db.get_events_by_date(self.calendarWidget.selectedDate().toString("yyyy-MM-dd"))
+        events = DBConnection().get_events_by_date(self.calendarWidget.selectedDate().toString("yyyy-MM-dd"))
         for event in events:
             self.listWidget.addItem(ListWidgetItem(event[0], event[1], self.listWidget))
 
-    def create_event(
-            self, theme: str, place: str, beginning_time: str, beginning_date: str, ending_date: str, comment: str
-    ):
-        self.calendarWidget.db.add_to_db(theme, place, beginning_time, beginning_date, ending_date, comment)
+    def after_create_event(self):
         cell_format = QtGui.QTextCharFormat()
         cell_format.setBackground(QtGui.QColor(0, 0, 150, 50))
-        self.calendarWidget.setDateTextFormat(QtCore.QDate.fromString(beginning_date, "yyyy-MM-dd"), cell_format)
-        self.calendarWidget.setSelectedDate(self.calendarWidget.selectedDate())
+        self.calendarWidget.setDateTextFormat(self.calendarWidget.selectedDate(), cell_format)
         self.load_events()
 

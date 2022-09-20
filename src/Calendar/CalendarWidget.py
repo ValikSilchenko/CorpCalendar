@@ -7,8 +7,7 @@ from DBConnection import DBConnection
 class CalendarWidget(QCalendarWidget):
     def __init__(self, parent=None):
         super(CalendarWidget, self).__init__(parent)
-        self.db = DBConnection()
-        self.dates_with_events = self.db.get_dates_with_events()
+        self.dates_with_events = DBConnection().get_dates_with_events()
 
     def paintCell(self, painter: QPainter, rect: QRect, date: QDate):
         super().paintCell(painter, rect, date)

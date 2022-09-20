@@ -1,13 +1,16 @@
+import datetime
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import *
+from DBConnection import DBConnection
 
 
 class EventDialog(QDialog):
-    event_data = QtCore.pyqtSignal(str, str, str, str, str, str)
+    event_data = QtCore.pyqtSignal()
 
     def __init__(self, parent=None):
         super(EventDialog, self).__init__(parent)
         self.setup_ui()
+        self.event_id = None
 
     def setup_ui(self):
         if self.objectName():
@@ -22,6 +25,8 @@ class EventDialog(QDialog):
         self.buttonBox.setObjectName(u"buttonBox")
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
         self.buttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
+        self.buttonBox.buttons()[1].setText("Отмена")
+        self.buttonBox.buttons()[0].setText("Ок")
         self.buttonBox.setCenterButtons(True)
 
         self.textBrowser = QTextBrowser(self)
@@ -69,6 +74,21 @@ class EventDialog(QDialog):
         self.commentLabel.setGeometry(QtCore.QRect(150, 110, 70, 15))
         self.commentLabel.setText("Комментарий")
 
+        self.deleteButton = QPushButton(self)
+        self.deleteButton.setObjectName(u"deleteButton")
+        self.deleteButton.setText("Удалить")
+        self.deleteButton.setHidden(True)
+
+        self.editButton = QPushButton(self)
+        self.editButton.setObjectName(u"editButton")
+        self.editButton.setText("Изменить")
+        self.editButton.setHidden(True)
+
+        self.cancelButton = QPushButton(self)
+        self.cancelButton.setObjectName(u"cancelButton")
+        self.cancelButton.setText("Отмена")
+        self.cancelButton.setHidden(True)
+
         self.gridLayout.addWidget(self.themeLabel, 0, 0, 1, 1)
         self.gridLayout.addWidget(self.themeEdit, 0, 1, 1, 2)
         self.gridLayout.addWidget(self.beginningLabel, 1, 0, 1, 1)
@@ -80,14 +100,39 @@ class EventDialog(QDialog):
         self.gridLayout.addWidget(self.place, 3, 1, 1, 2)
         self.gridLayout.addWidget(self.commentLabel, 4, 1, 1, 2)
         self.gridLayout.addWidget(self.textBrowser, 5, 0, 1, 3)
+        self.gridLayout.addWidget(self.deleteButton, 6, 0, 1, 1)
         self.gridLayout.addWidget(self.buttonBox, 6, 0, 1, 3)
+        self.gridLayout.addWidget(self.editButton, 6, 1, 1, 1)
+        self.gridLayout.addWidget(self.cancelButton, 6, 2, 1, 1)
 
-        self.buttonBox.accepted.connect(self.send_to_main)
+        self.buttonBox.accepted.connect(self.create_event)
         self.buttonBox.rejected.connect(self.reject)
+
+        self.cancelButton.clicked.connect(self.reject)
+        self.deleteButton.clicked.connect(self.delete_event)
+        self.editButton.clicked.connect(self.edit_event)
 
         QtCore.QMetaObject.connectSlotsByName(self)
 
+    def switch_mode(self):
+        is_hidden = self.buttonBox.isHidden()
+        is_read_only = self.themeEdit.isReadOnly()
+
+        self.buttonBox.setHidden(not is_hidden)
+        self.deleteButton.setHidden(is_hidden)
+        self.editButton.setHidden(is_hidden)
+        self.cancelButton.setHidden(is_hidden)
+
+        self.themeEdit.setReadOnly(not is_read_only)
+        self.place.setReadOnly(not is_read_only)
+        self.beginningTime.setReadOnly(not is_read_only)
+        self.beginningDate.setReadOnly(not is_read_only)
+        self.endingDate.setReadOnly(not is_read_only)
+        self.textBrowser.setReadOnly(not is_read_only)
+
     def show(self, date=QtCore.QDate.currentDate()):
+        if self.buttonBox.isHidden():
+            self.switch_mode()
         self.themeEdit.clear()
         self.place.clear()
         self.beginningTime.setTime(QtCore.QTime.currentTime())
@@ -96,22 +141,50 @@ class EventDialog(QDialog):
         self.textBrowser.clear()
         super(EventDialog, self).show()
 
-    # def show_selected_event(self):
-    #     self.themeEdit.clear()
-    #     self.place.clear()
-    #     self.beginningTime.setTime(QtCore.QTime.currentTime())
-    #     self.beginningDate.setDate(date)
-    #     self.endingDate.setDate(date)
-    #     self.textBrowser.clear()
+    def show_event(self, event_id: int):
+        self.event_id = event_id
+        if not self.buttonBox.isHidden():
+            self.switch_mode()
+        event_data = DBConnection().get_event_by_id(event_id)
+        self.themeEdit.setText(event_data[1])
+        self.place.setText(event_data[2])
+        self.beginningTime.setTime(QtCore.QTime.fromString(str(event_data[3]), "HH:mm:ss"))
+        self.beginningDate.setDate(QtCore.QDate.fromString(str(event_data[4]), "yyyy-MM-dd"))
+        self.endingDate.setDate(QtCore.QDate.fromString(str(event_data[5]), "yyyy-MM-dd"))
+        self.textBrowser.setText(event_data[6])
+        super(EventDialog, self).show()
 
-    def send_to_main(self):
+    def create_event(self):
         if not self.themeEdit.text().isspace() and self.themeEdit.text() != '':
-            self.event_data.emit(
+            DBConnection().add_event(
                 self.themeEdit.text(),
                 self.place.text(),
                 self.beginningTime.time().toString("HH:mm:ss"),
                 self.beginningDate.date().toString("yyyy-MM-dd"),
                 self.endingDate.date().toString("yyyy-MM-dd"),
-                self.textBrowser.toPlainText()
-            )
+                self.textBrowser.toPlainText())
+            self.event_data.emit()
+            self.close()
+
+    def edit_event(self):
+        self.switch_mode()
+        # DBConnection().update_event(
+        #     "id",
+        #     self.themeEdit.text(),
+        #     self.place.text(),
+        #     self.beginningTime.time().toString("HH:mm:ss"),
+        #     self.beginningDate.date().toString("yyyy-MM-dd"),
+        #     self.endingDate.date().toString("yyyy-MM-dd"),
+        #     self.textBrowser.toPlainText())
+
+    def delete_event(self):
+        dial = QMessageBox(self)
+        dial.setWindowTitle("Подтверждение")
+        dial.setText("Вы уверены, что хотите удалить это мероприятие?")
+        dial.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        dial.buttons()[1].setText("Отмена")
+        dial.buttons()[0].setText("Да")
+
+        if dial.exec() == QMessageBox.Yes:
+            DBConnection().delete_event(self.event_id)
             self.close()
