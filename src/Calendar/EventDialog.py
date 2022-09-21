@@ -6,6 +6,7 @@ from DBConnection import DBConnection
 
 class EventDialog(QDialog):
     event_data = QtCore.pyqtSignal()
+    load_events = QtCore.pyqtSignal()
 
     def __init__(self, parent=None):
         super(EventDialog, self).__init__(parent)
@@ -105,7 +106,7 @@ class EventDialog(QDialog):
         self.gridLayout.addWidget(self.editButton, 6, 1, 1, 1)
         self.gridLayout.addWidget(self.cancelButton, 6, 2, 1, 1)
 
-        self.buttonBox.accepted.connect(self.create_event)
+        self.buttonBox.accepted.connect(self.add_edit_event)
         self.buttonBox.rejected.connect(self.reject)
 
         self.cancelButton.clicked.connect(self.reject)
@@ -131,8 +132,11 @@ class EventDialog(QDialog):
         self.textBrowser.setReadOnly(not is_read_only)
 
     def show(self, date=QtCore.QDate.currentDate()):
+        self.event_id = None
+
         if self.buttonBox.isHidden():
             self.switch_mode()
+
         self.themeEdit.clear()
         self.place.clear()
         self.beginningTime.setTime(QtCore.QTime.currentTime())
@@ -143,8 +147,10 @@ class EventDialog(QDialog):
 
     def show_event(self, event_id: int):
         self.event_id = event_id
+
         if not self.buttonBox.isHidden():
             self.switch_mode()
+
         event_data = DBConnection().get_event_by_id(event_id)
         self.themeEdit.setText(event_data[1])
         self.place.setText(event_data[2])
@@ -154,17 +160,34 @@ class EventDialog(QDialog):
         self.textBrowser.setText(event_data[6])
         super(EventDialog, self).show()
 
-    def create_event(self):
+    def add_edit_event(self):
         if not self.themeEdit.text().isspace() and self.themeEdit.text() != '':
-            DBConnection().add_event(
-                self.themeEdit.text(),
-                self.place.text(),
-                self.beginningTime.time().toString("HH:mm:ss"),
-                self.beginningDate.date().toString("yyyy-MM-dd"),
-                self.endingDate.date().toString("yyyy-MM-dd"),
-                self.textBrowser.toPlainText())
-            self.event_data.emit()
+            if self.event_id is None:
+                DBConnection().add_event(
+                    self.themeEdit.text(),
+                    self.place.text(),
+                    self.beginningTime.time().toString("HH:mm:ss"),
+                    self.beginningDate.date().toString("yyyy-MM-dd"),
+                    self.endingDate.date().toString("yyyy-MM-dd"),
+                    self.textBrowser.toPlainText())
+                self.event_data.emit()
+            else:
+                DBConnection().update_event(
+                    self.event_id,
+                    self.themeEdit.text(),
+                    self.place.text(),
+                    self.beginningTime.time().toString("HH:mm:ss"),
+                    self.beginningDate.date().toString("yyyy-MM-dd"),
+                    self.endingDate.date().toString("yyyy-MM-dd"),
+                    self.textBrowser.toPlainText())
+            self.load_events.emit()
             self.close()
+        else:
+            dial = QMessageBox(self)
+            dial.setWindowTitle("Предупреждение")
+            dial.setText("Заполните поле \"Тема\".")
+            dial.setStandardButtons(QMessageBox.Ok)
+            dial.exec()
 
     def edit_event(self):
         self.switch_mode()
@@ -187,4 +210,6 @@ class EventDialog(QDialog):
 
         if dial.exec() == QMessageBox.Yes:
             DBConnection().delete_event(self.event_id)
+            self.event_data.emit()
+            self.load_events.emit()
             self.close()

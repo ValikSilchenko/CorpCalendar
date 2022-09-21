@@ -11,6 +11,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setup_ui()
         self.dialog = EventDialog(self)
         self.dialog.event_data.connect(self.after_create_event)
+        self.dialog.load_events.connect(self.load_events)
         self.load_events()
 
     def setup_ui(self):
@@ -98,7 +99,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def after_create_event(self):
         cell_format = QtGui.QTextCharFormat()
-        cell_format.setBackground(QtGui.QColor(0, 0, 150, 50))
+        if DBConnection().get_events_by_date(self.calendarWidget.selectedDate().toString("yyyy-MM-dd")):
+            cell_format.setBackground(QtGui.QColor(0, 0, 150, 50))
+        else:
+            cell_format.setBackground(QtGui.QColor(255, 255, 255, 50))
+            print('/')
+
         self.calendarWidget.setDateTextFormat(self.calendarWidget.selectedDate(), cell_format)
-        self.load_events()
+        self.calendarWidget.selectedDate()
 
