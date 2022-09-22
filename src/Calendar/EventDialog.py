@@ -111,7 +111,7 @@ class EventDialog(QDialog):
 
         self.cancelButton.clicked.connect(self.reject)
         self.deleteButton.clicked.connect(self.delete_event)
-        self.editButton.clicked.connect(self.edit_event)
+        self.editButton.clicked.connect(self.switch_mode)
 
         QtCore.QMetaObject.connectSlotsByName(self)
 
@@ -188,17 +188,6 @@ class EventDialog(QDialog):
             dial.setText("Заполните поле \"Тема\".")
             dial.setStandardButtons(QMessageBox.Ok)
             dial.exec()
-
-    def edit_event(self):
-        self.switch_mode()
-        # DBConnection().update_event(
-        #     "id",
-        #     self.themeEdit.text(),
-        #     self.place.text(),
-        #     self.beginningTime.time().toString("HH:mm:ss"),
-        #     self.beginningDate.date().toString("yyyy-MM-dd"),
-        #     self.endingDate.date().toString("yyyy-MM-dd"),
-        #     self.textBrowser.toPlainText())
 
     def delete_event(self):
         dial = QMessageBox(self)
