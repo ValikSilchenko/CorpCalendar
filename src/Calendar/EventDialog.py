@@ -5,7 +5,7 @@ from DBConnection import DBConnection
 
 
 class EventDialog(QDialog):
-    event_data = QtCore.pyqtSignal()
+    event_data = QtCore.pyqtSignal(QtCore.QDate)
     load_events = QtCore.pyqtSignal()
 
     def __init__(self, parent=None):
@@ -170,7 +170,7 @@ class EventDialog(QDialog):
                     self.beginningDate.date().toString("yyyy-MM-dd"),
                     self.endingDate.date().toString("yyyy-MM-dd"),
                     self.textBrowser.toPlainText())
-                self.event_data.emit()
+                self.event_data.emit(self.beginningDate.date())
             else:
                 DBConnection().update_event(
                     self.event_id,
@@ -210,6 +210,6 @@ class EventDialog(QDialog):
 
         if dial.exec() == QMessageBox.Yes:
             DBConnection().delete_event(self.event_id)
-            self.event_data.emit()
+            self.event_data.emit(self.beginningDate.date())
             self.load_events.emit()
             self.close()

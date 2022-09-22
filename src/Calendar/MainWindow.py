@@ -2,6 +2,7 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 from EventDialog import EventDialog
 from CalendarWidget import CalendarWidget
 from ListWidgetItem import ListWidgetItem
+from TableWidgetItem import TableWidgetItem
 from DBConnection import DBConnection
 
 
@@ -10,7 +11,7 @@ class MainWindow(QtWidgets.QMainWindow):
         super().__init__()
         self.setup_ui()
         self.dialog = EventDialog(self)
-        self.dialog.event_data.connect(self.after_create_event)
+        self.dialog.event_data[QtCore.QDate].connect(self.after_create_event)
         self.dialog.load_events.connect(self.load_events)
         self.load_events()
 
@@ -33,18 +34,19 @@ class MainWindow(QtWidgets.QMainWindow):
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
 
-        self.radioButton = QtWidgets.QRadioButton(self.centralwidget)
-        self.radioButton.setObjectName("radioButton")
-        self.horizontalLayout.addWidget(self.radioButton)
+        self.listViewButton = QtWidgets.QRadioButton(self.centralwidget)
+        self.listViewButton.setObjectName("listViewButton")
+        self.listViewButton.setChecked(True)
+        self.horizontalLayout.addWidget(self.listViewButton)
 
-        self.radioButton_2 = QtWidgets.QRadioButton(self.centralwidget)
-        self.radioButton_2.setObjectName("radioButton_2")
-        self.horizontalLayout.addWidget(self.radioButton_2)
+        self.tableViewButton = QtWidgets.QRadioButton(self.centralwidget)
+        self.tableViewButton.setObjectName("tableViewButton")
+        self.horizontalLayout.addWidget(self.tableViewButton)
 
         self.buttonGroup = QtWidgets.QButtonGroup(self)
         self.buttonGroup.setObjectName("buttonGroup")
-        self.buttonGroup.addButton(self.radioButton)
-        self.buttonGroup.addButton(self.radioButton_2)
+        self.buttonGroup.addButton(self.listViewButton)
+        self.buttonGroup.addButton(self.tableViewButton)
         self.gridLayout.addLayout(self.horizontalLayout, 0, 4, 1, 1)
 
         spacerItem1 = QtWidgets.QSpacerItem(170, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
@@ -65,8 +67,26 @@ class MainWindow(QtWidgets.QMainWindow):
         self.listWidget = QtWidgets.QListWidget(self.centralwidget)
         self.listWidget.setMinimumSize(QtCore.QSize(360, 370))
         self.listWidget.setObjectName("listWidget")
+        self.listWidget.setFont(QtGui.QFont("MS Shell Dlg 2", 12))
         self.gridLayout.addWidget(self.listWidget, 1, 3, 1, 3)
         self.listWidget.itemClicked.connect(self.show_event_dialog)
+
+        self.tableWidget = QtWidgets.QTableWidget(self.centralwidget)
+        self.tableWidget.setObjectName(u"tableWidget")
+        self.tableWidget.setMinimumSize(QtCore.QSize(360, 370))
+        self.tableWidget.setSortingEnabled(self.tableWidget.isSortingEnabled())
+        self.tableWidget.setColumnCount(6)
+        self.tableWidget.setHorizontalHeaderItem(0, QtWidgets.QTableWidgetItem("Тема"))
+        self.tableWidget.setHorizontalHeaderItem(1, QtWidgets.QTableWidgetItem("Место"))
+        self.tableWidget.setHorizontalHeaderItem(2, QtWidgets.QTableWidgetItem("Время"))
+        self.tableWidget.setHorizontalHeaderItem(3, QtWidgets.QTableWidgetItem("Дата начала"))
+        self.tableWidget.setHorizontalHeaderItem(4, QtWidgets.QTableWidgetItem("Дата окончания"))
+        self.tableWidget.setHorizontalHeaderItem(5, QtWidgets.QTableWidgetItem("Комментарий"))
+        self.tableWidget.setFont(QtGui.QFont("MS Shell Dlg 2", 12))
+        self.tableWidget.itemClicked.connect(self.show_event_dialog)
+        self.tableWidget.setHidden(True)
+
+        self.gridLayout.addWidget(self.tableWidget, 1, 3, 1, 3)
 
         self.setCentralWidget(self.centralwidget)
 
@@ -76,16 +96,20 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setMenuBar(self.menubar)
 
         self.pushButton.clicked.connect(self.show_create_event_dialog)
+        self.buttonGroup.buttonClicked.connect(self.change_items_view)
 
-        self.setWindowTitle("CorpCalendar")
-        self.pushButton.setText("PushButton")
-        self.radioButton.setText("RadioButton")
-        self.radioButton_2.setText("RadioButton")
+        self.setWindowTitle("Календарь мероприятий")
+        self.pushButton.setText("Создать")
+        self.listViewButton.setText("Список")
+        self.tableViewButton.setText("Таблица")
 
         QtCore.QMetaObject.connectSlotsByName(self)
 
     def show_event_dialog(self):
-        self.dialog.show_event(self.listWidget.currentItem().id)
+        if self.listViewButton.isChecked():
+            self.dialog.show_event(self.listWidget.currentItem().id)
+        else:
+            self.dialog.show_event(self.tableWidget.currentItem().id)
 
     def show_create_event_dialog(self):
         if self.dialog.isHidden():
@@ -93,18 +117,48 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def load_events(self):
         self.listWidget.clear()
+        self.tableWidget.clearContents()
+        self.tableWidget.setRowCount(0)
         events = DBConnection().get_events_by_date(self.calendarWidget.selectedDate().toString("yyyy-MM-dd"))
         for event in events:
+            rows = self.tableWidget.rowCount()
             self.listWidget.addItem(ListWidgetItem(event[0], event[1], self.listWidget))
 
-    def after_create_event(self):
+            self.tableWidget.setRowCount(rows + 1)
+            self.tableWidget.setVerticalHeaderItem(rows, QtWidgets.QTableWidgetItem(rows + 1))
+
+            self.tableWidget.setItem(rows, 0, TableWidgetItem(event[0], event[1]))
+            self.tableWidget.item(rows, 0).setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
+
+            self.tableWidget.setItem(rows, 1, TableWidgetItem(event[0], event[2]))
+            self.tableWidget.item(rows, 1).setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
+
+            self.tableWidget.setItem(rows, 2, TableWidgetItem(event[0], event[3].strftime("%H:%M:%H")))
+            self.tableWidget.item(rows, 2).setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
+
+            self.tableWidget.setItem(rows, 3, TableWidgetItem(event[0], event[4].strftime("%Y-%m-%d")))
+            self.tableWidget.item(rows, 3).setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
+
+            self.tableWidget.setItem(rows, 4, TableWidgetItem(event[0], event[5].strftime("%Y-%m-%d")))
+            self.tableWidget.item(rows, 4).setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
+
+            self.tableWidget.setItem(rows, 5, TableWidgetItem(event[0], event[6]))
+            self.tableWidget.item(rows, 5).setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
+
+    def change_items_view(self):
+        if self.listViewButton.isChecked():
+            self.listWidget.setHidden(False)
+            self.tableWidget.setHidden(True)
+        else:
+            self.listWidget.setHidden(True)
+            self.tableWidget.setHidden(False)
+
+    def after_create_event(self, date: QtCore.QDate):
         cell_format = QtGui.QTextCharFormat()
-        if DBConnection().get_events_by_date(self.calendarWidget.selectedDate().toString("yyyy-MM-dd")):
+        if DBConnection().get_events_by_date(date.toString("yyyy-MM-dd")):
             cell_format.setBackground(QtGui.QColor(0, 0, 150, 50))
         else:
-            cell_format.setBackground(QtGui.QColor(255, 255, 255, 50))
-            print('/')
+            cell_format.setBackground(QtGui.QColor(255, 255, 255, 100))
 
-        self.calendarWidget.setDateTextFormat(self.calendarWidget.selectedDate(), cell_format)
+        self.calendarWidget.setDateTextFormat(date, cell_format)
         self.calendarWidget.selectedDate()
-
