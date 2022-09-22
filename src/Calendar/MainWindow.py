@@ -161,4 +161,3 @@ class MainWindow(QtWidgets.QMainWindow):
             cell_format.setBackground(QtGui.QColor(255, 255, 255, 100))
 
         self.calendarWidget.setDateTextFormat(date, cell_format)
-        self.calendarWidget.selectedDate()
