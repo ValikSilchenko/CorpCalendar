@@ -15,3 +15,4 @@ class CalendarWidget(QCalendarWidget):
         cell_format.setBackground(QColor(0, 0, 150, 50))
         if date.toString("yyyy-MM-dd") in self.dates_with_events:
             self.setDateTextFormat(date, cell_format)
+

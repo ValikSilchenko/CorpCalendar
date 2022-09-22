@@ -5,6 +5,14 @@ from DBConnection import DBConnection
 
 
 class EventDialog(QDialog):
+    """
+
+    Класс дочернего окна.
+    event_data - сигнал для перекрашивания ячеек после действий с мероприятиями
+    load_events - сигнал для загрузки мероприятий после действий с ними (подгрузка новых или удаление старых)
+    self.event_id - id мероприятия, хранит None в случае работы в режиме создания мероприятия или int в случае показа.
+
+    """
     event_data = QtCore.pyqtSignal(QtCore.QDate)
     load_events = QtCore.pyqtSignal()
 
@@ -14,6 +22,7 @@ class EventDialog(QDialog):
         self.event_id = None
 
     def setup_ui(self):
+        """Функция создания объектов окна"""
         if self.objectName():
             self.setObjectName(u"EventDialog")
         self.setWindowTitle("Create event")
@@ -116,6 +125,7 @@ class EventDialog(QDialog):
         QtCore.QMetaObject.connectSlotsByName(self)
 
     def switch_mode(self):
+        """Изменение режима работы окна (режим создания или режим показа)"""
         is_hidden = self.buttonBox.isHidden()
         is_read_only = self.themeEdit.isReadOnly()
 

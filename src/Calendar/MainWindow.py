@@ -7,7 +7,14 @@ from DBConnection import DBConnection
 
 
 class MainWindow(QtWidgets.QMainWindow):
+    """
+
+    Класс основного окна
+    self.dialog - дочернее окно
+
+    """
     def __init__(self):
+        """Конструктор"""
         super().__init__()
         self.setup_ui()
         self.dialog = EventDialog(self)
@@ -16,6 +23,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.load_events()
 
     def setup_ui(self):
+        """Функция создания объектов окна (виджетов)"""
         self.setObjectName("MainWindow")
         self.resize(802, 460)
         self.centralwidget = QtWidgets.QWidget(self)
@@ -57,6 +65,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.calendarWidget.setObjectName("calendarWidget")
         self.calendarWidget.setStyleSheet('''selection-background-color: rgba(50, 50, 50, 80);
         hover: rgba(120, 185, 180, 50);''')
+
         self.gridLayout.addWidget(self.calendarWidget, 1, 0, 1, 2)
 
         self.calendarWidget.selectionChanged.connect(self.load_events)
@@ -69,7 +78,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.listWidget.setObjectName("listWidget")
         self.listWidget.setFont(QtGui.QFont("MS Shell Dlg 2", 12))
         self.gridLayout.addWidget(self.listWidget, 1, 3, 1, 3)
-        self.listWidget.itemClicked.connect(self.show_event_dialog)
+        self.listWidget.itemClicked.connect(self.show_event_dialog)  # регистрирование нажатия на элемент списка
 
         self.tableWidget = QtWidgets.QTableWidget(self.centralwidget)
         self.tableWidget.setObjectName(u"tableWidget")
@@ -83,7 +92,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tableWidget.setHorizontalHeaderItem(4, QtWidgets.QTableWidgetItem("Дата окончания"))
         self.tableWidget.setHorizontalHeaderItem(5, QtWidgets.QTableWidgetItem("Комментарий"))
         self.tableWidget.setFont(QtGui.QFont("MS Shell Dlg 2", 12))
-        self.tableWidget.itemClicked.connect(self.show_event_dialog)
+        self.tableWidget.itemClicked.connect(self.show_event_dialog)  # регистрирование нажатия на элемент таблицы
         self.tableWidget.setHidden(True)
 
         self.gridLayout.addWidget(self.tableWidget, 1, 3, 1, 3)
@@ -95,8 +104,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.menubar.setObjectName("menubar")
         self.setMenuBar(self.menubar)
 
-        self.pushButton.clicked.connect(self.show_create_event_dialog)
-        self.buttonGroup.buttonClicked.connect(self.change_items_view)
+        self.pushButton.clicked.connect(self.show_create_event_dialog)   # регистрирование нажатия на кнопку "Создать"
+        self.buttonGroup.buttonClicked.connect(self.change_items_view)  # регистрирование нажатия на кнопки "Список" и "Таблица"
 
         self.setWindowTitle("Календарь мероприятий")
         self.pushButton.setText("Создать")
@@ -106,16 +115,19 @@ class MainWindow(QtWidgets.QMainWindow):
         QtCore.QMetaObject.connectSlotsByName(self)
 
     def show_event_dialog(self):
+        """Показ диалога с данными о мероприятии"""
         if self.listViewButton.isChecked():
             self.dialog.show_event(self.listWidget.currentItem().id)
         else:
             self.dialog.show_event(self.tableWidget.currentItem().id)
 
     def show_create_event_dialog(self):
+        """Показ пустого диалога для создания мероприятия"""
         if self.dialog.isHidden():
             self.dialog.show(self.calendarWidget.selectedDate())
 
     def load_events(self):
+        """Загрузка всех мероприятий на выбранную в календаре дату"""
         self.listWidget.clear()
         self.tableWidget.clearContents()
         self.tableWidget.setRowCount(0)
@@ -146,6 +158,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.tableWidget.item(rows, 5).setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
 
     def change_items_view(self):
+        """Изменение способа отображения мероприятий (список или таблица)"""
         if self.listViewButton.isChecked():
             self.listWidget.setHidden(False)
             self.tableWidget.setHidden(True)
@@ -154,6 +167,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.tableWidget.setHidden(False)
 
     def after_create_event(self, date: QtCore.QDate):
+        """Перекрашивание ячеек после действий с мероприятиями"""
         cell_format = QtGui.QTextCharFormat()
         if DBConnection().get_events_by_date(date.toString("yyyy-MM-dd")):
             cell_format.setBackground(QtGui.QColor(0, 0, 150, 50))
